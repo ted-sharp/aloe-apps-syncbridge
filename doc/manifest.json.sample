@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "\\\\shared-server\\DeployRoot",
+  "localBasePath": "%LocalAppData%\\Company\\SyncBridge",
+
+  "runtime": {
+    "version": "10.0.2",
+    "relativePath": "runtime/dotnet-10.0.2"
+  },
+
+  "applications": [
+    {
+      "appId": "AppA",
+      "displayName": "Application A",
+      "version": "1.4.7",
+      "relativePath": "apps/AppA-1.4.7",
+      "entryDll": "AppA.dll",
+      "launchArgPattern": "--app=AppA"
+    },
+    {
+      "appId": "AppB",
+      "displayName": "Application B",
+      "version": "2.1.0",
+      "relativePath": "apps/AppB-2.1.0",
+      "entryDll": "AppB.dll",
+      "launchArgPattern": "--app=AppB"
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": ["*.pdb", "*.log"],
+    "retryCount": 3,
+    "timeoutSeconds": 300
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "C:\\TestData\\Source",
+  "localBasePath": "%TEMP%\\SyncBridgeTest\\EmptyApps",
+
+  "runtime": {
+    "version": "8.0.0",
+    "relativePath": "runtime/dotnet-8.0.0"
+  },
+
+  "applications": [],
+
+  "syncOptions": {
+    "skipPatterns": [],
+    "retryCount": 3,
+    "timeoutSeconds": 300
+  }
+}

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/Apps/" />
+  <Folder Name="/Apps/AuditViewer/" />
+  <Folder Name="/Apps/BannerAleart/" />
+  <Folder Name="/Apps/BarcodeReaderBridge/" />
+  <Folder Name="/Apps/ClipboardBridge/" />
+  <Folder Name="/Apps/FileBridge/" />
+  <Folder Name="/Apps/SyncBridge/">
+    <Project Path="Aloe/Apps/SyncBridge/Aloe.Apps.DummyWpf/Aloe.Apps.DummyWpf.csproj" Id="0d81ffbd-5f0b-4504-a1cd-6e959217c611" />
+    <Project Path="Aloe/Apps/SyncBridge/Aloe.Apps.SyncBridge/Aloe.Apps.SyncBridge.csproj" Id="3d4de615-439c-4138-9586-66291f8a8d89" />
+    <Project Path="Aloe/Apps/SyncBridge/Aloe.Apps.SyncBridgeLib/Aloe.Apps.SyncBridgeLib.csproj" Id="a73beae5-1d20-48eb-9c7b-15fb07de1624" />
+  </Folder>
+  <Folder Name="/Apps/SmbWatchdog/" />
+  <Folder Name="/Apps/TeamsAlert/" />
+</Solution>

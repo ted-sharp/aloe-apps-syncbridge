@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "C:\\TestData\\Source",
+  "localBasePath": "%TEMP%\\SyncBridgeTest\\DummyWpf",
+
+  "runtime": {
+    "version": "10.0.0",
+    "relativePath": "runtime/dotnet-10.0.0"
+  },
+
+  "applications": [
+    {
+      "appId": "DummyWpf",
+      "displayName": "Dummy WPF Sample Application",
+      "version": "1.0.0",
+      "relativePath": "apps/DummyWpf-1.0.0",
+      "entryDll": "DummyWpf.dll",
+      "launchArgPattern": "--app=DummyWpf --mode=test"
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": ["*.pdb", "*.log", "*.tmp"],
+    "retryCount": 3,
+    "timeoutSeconds": 300
+  }
+}

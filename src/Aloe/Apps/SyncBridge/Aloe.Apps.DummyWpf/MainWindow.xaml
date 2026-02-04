@@ -1,0 +1,90 @@
+﻿<Window
+    x:Class="Aloe.Apps.DummyWpf.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Aloe.Apps.DummyWpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="DummyWpf - SyncBridge Sample Application"
+    Width="800"
+    Height="600"
+    mc:Ignorable="d">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock
+            Grid.Row="0"
+            Margin="0,0,0,20"
+            FontSize="24"
+            FontWeight="Bold"
+            Text="SyncBridge Sample Application" />
+
+        <GroupBox
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Header="Application Information">
+            <StackPanel Margin="10">
+                <TextBlock>
+                    <Run FontWeight="Bold" Text="Assembly Name: " />
+                    <Run x:Name="AssemblyNameText" />
+                </TextBlock>
+                <TextBlock Margin="0,5,0,0">
+                    <Run FontWeight="Bold" Text="Version: " />
+                    <Run x:Name="VersionText" />
+                </TextBlock>
+                <TextBlock Margin="0,5,0,0">
+                    <Run FontWeight="Bold" Text="Working Directory: " />
+                    <Run x:Name="WorkingDirectoryText" />
+                </TextBlock>
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox
+            Grid.Row="2"
+            Margin="0,0,0,10"
+            Header="Command Line Arguments">
+            <StackPanel Margin="10">
+                <TextBlock x:Name="ArgsCountText" Margin="0,0,0,5" />
+                <TextBox
+                    x:Name="ArgsTextBox"
+                    MinHeight="60"
+                    IsReadOnly="True"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+            </StackPanel>
+        </GroupBox>
+
+        <GroupBox
+            Grid.Row="3"
+            Margin="0,0,0,10"
+            Header="Environment Variables">
+            <ScrollViewer>
+                <TextBox
+                    x:Name="EnvironmentTextBox"
+                    IsReadOnly="True"
+                    TextWrapping="Wrap" />
+            </ScrollViewer>
+        </GroupBox>
+
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Width="100"
+                Margin="0,0,10,0"
+                Click="RefreshButton_Click"
+                Content="Refresh" />
+            <Button
+                Width="100"
+                Click="CloseButton_Click"
+                Content="Close" />
+        </StackPanel>
+    </Grid>
+</Window>

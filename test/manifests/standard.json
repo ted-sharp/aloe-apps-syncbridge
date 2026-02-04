@@ -1,0 +1,43 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "C:\\TestData\\Source",
+  "localBasePath": "%TEMP%\\SyncBridgeTest\\Standard",
+
+  "runtime": {
+    "version": "8.0.0",
+    "relativePath": "runtime/dotnet-8.0.0"
+  },
+
+  "applications": [
+    {
+      "appId": "App1",
+      "displayName": "Application One",
+      "version": "1.2.3",
+      "relativePath": "apps/App1-1.2.3",
+      "entryDll": "App1.dll",
+      "launchArgPattern": "--app=App1 --env=test"
+    },
+    {
+      "appId": "App2",
+      "displayName": "Application Two",
+      "version": "2.0.0",
+      "relativePath": "apps/App2-2.0.0",
+      "entryDll": "App2.Main.dll",
+      "launchArgPattern": "--app=App2"
+    },
+    {
+      "appId": "App3",
+      "displayName": "Application Three",
+      "version": "0.9.5",
+      "relativePath": "apps/App3-0.9.5",
+      "entryDll": "App3.exe",
+      "launchArgPattern": ""
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": ["*.pdb", "*.log", "*.tmp", "temp/*"],
+    "retryCount": 3,
+    "timeoutSeconds": 300
+  }
+}

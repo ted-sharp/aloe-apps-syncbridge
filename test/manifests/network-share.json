@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "\\\\test-server\\DeployShare",
+  "localBasePath": "%LocalAppData%\\SyncBridgeTest\\NetworkShare",
+
+  "runtime": {
+    "version": "8.0.0",
+    "relativePath": "runtime/dotnet-8.0.0"
+  },
+
+  "applications": [
+    {
+      "appId": "NetworkApp",
+      "displayName": "Network Application",
+      "version": "1.0.0",
+      "relativePath": "apps/NetworkApp-1.0.0",
+      "entryDll": "NetworkApp.dll",
+      "launchArgPattern": "--network=true"
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": ["*.pdb"],
+    "retryCount": 5,
+    "timeoutSeconds": 600
+  }
+}

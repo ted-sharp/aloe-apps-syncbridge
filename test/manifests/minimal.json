@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "C:\\TestData\\Source",
+  "localBasePath": "%TEMP%\\SyncBridgeTest\\Minimal",
+
+  "runtime": {
+    "version": "8.0.0",
+    "relativePath": "runtime/dotnet-8.0.0"
+  },
+
+  "applications": [
+    {
+      "appId": "TestApp",
+      "displayName": "Test Application",
+      "version": "1.0.0",
+      "relativePath": "apps/TestApp-1.0.0",
+      "entryDll": "TestApp.dll",
+      "launchArgPattern": "--mode=test"
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": [],
+    "retryCount": 1,
+    "timeoutSeconds": 60
+  }
+}

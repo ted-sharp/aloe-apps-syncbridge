@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "sourceRootPath": "C:\\TestData\\Source (Staging)",
+  "localBasePath": "%TEMP%\\SyncBridgeTest\\Special-Chars_123",
+
+  "runtime": {
+    "version": "10.0.0-preview.1",
+    "relativePath": "runtime/dotnet-10.0.0-preview.1"
+  },
+
+  "applications": [
+    {
+      "appId": "App-With-Dashes",
+      "displayName": "Application (Test & Dev)",
+      "version": "1.0.0-beta.2",
+      "relativePath": "apps/App_With_Underscores-1.0.0",
+      "entryDll": "App.Main.dll",
+      "launchArgPattern": "--config=\"test & dev\" --mode=beta"
+    }
+  ],
+
+  "syncOptions": {
+    "skipPatterns": ["*.pdb", "*.log", "test-*.tmp"],
+    "retryCount": 3,
+    "timeoutSeconds": 300
+  }
+}
