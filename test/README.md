@@ -35,6 +35,49 @@ PowerShell を管理者権限で実行し、以下のコマンドを実行しま
 
 # DummyWpfアプリケーションをビルドして配置
 .\test\setup-test-data.ps1 -BuildDummyWpf
+
+# 実際の .NET 10 ランタイムをダウンロード (統合テスト用)
+.\test\setup-test-data.ps1 -DownloadRealRuntime
+
+# 完全な統合テスト環境のセットアップ (DummyWpf + 実際のランタイム)
+.\test\setup-test-data.ps1 -BuildDummyWpf -DownloadRealRuntime
+
+# クリーンアップして完全な統合テスト環境を再構築
+.\test\setup-test-data.ps1 -Clean -BuildDummyWpf -DownloadRealRuntime
+
+# ランタイムキャッシュを無効化 (常に最新版をダウンロード)
+.\test\setup-test-data.ps1 -DownloadRealRuntime -UseRuntimeCache:$false
+```
+
+#### ランタイムダウンロード機能について
+
+`-DownloadRealRuntime` スイッチを使用すると、Microsoft の公式 CDN から最新の .NET 10 Runtime (base + Windows Desktop) をダウンロードして統合テストに使用できます。
+
+**機能の特徴:**
+- 最新の安定版 .NET 10 ランタイムを自動検出してダウンロード
+- ダウンロードしたファイルは `%TEMP%\SyncBridge-RuntimeCache\` にキャッシュされます
+- SHA512 ハッシュ検証によるファイル整合性チェック (環境で利用可能な場合)
+- ネットワークエラー時は 3 回まで自動リトライ
+- キャッシュを利用すると 2 回目以降のセットアップが高速化 (約 5 秒)
+
+**ダウンロードサイズ:**
+- Base Runtime: 約 25 MB
+- Windows Desktop Runtime: 約 37 MB
+- 合計ダウンロード: 約 62 MB
+- 展開後のサイズ: 約 200-250 MB
+- 初回ダウンロード時間: 1-3 分程度 (回線速度により変動)
+
+**ダウンロード内容:**
+- Base .NET Runtime: `dotnet.exe` とコアフレームワーク (`Microsoft.NETCore.App`)
+- Windows Desktop Runtime: WPF/WinForms フレームワーク (`Microsoft.WindowsDesktop.App`)
+- これらにより、DummyWpf などのデスクトップアプリケーションを実際に起動できる完全な実行環境が構築されます
+
+**キャッシュディレクトリ:**
+デフォルトでは `%TEMP%\SyncBridge-RuntimeCache\` にダウンロードファイルがキャッシュされます。
+カスタムキャッシュディレクトリを指定する場合:
+
+```powershell
+.\test\setup-test-data.ps1 -DownloadRealRuntime -RuntimeCacheDir "D:\MyCache"
 ```
 
 ### 2. マニフェストの配置
@@ -153,6 +196,91 @@ public class ManifestTests
 ### 環境変数が展開されない
 - `JsonManifestRepository.LoadManifest()` が環境変数を自動的に展開します
 - テスト時は実際のパスに置き換えるか、`Environment.ExpandEnvironmentVariables()` を使用してください
+
+### ランタイムダウンロード機能の変更履歴
+
+**2026-02-04 (v2) - 完全ランタイムサポート追加:**
+- Base Runtime と Windows Desktop Runtime の両方をダウンロードするように修正
+- `dotnet.exe` が含まれるようになり、実際のアプリケーション起動が可能に
+- ダウンロードサイズが約 37 MB → 約 62 MB に増加
+- 統合テスト環境として完全に機能するように改善
+- 両パッケージの抽出をマージすることで完全な実行環境を構築
+
+**2026-02-04 (v1) - メタデータクエリ修正:**
+以下の問題が修正されました:
+
+1. **メタデータフィルタの修正**: Windows Desktop Runtime ZIP ファイルの検索条件を修正し、正しいファイル名パターン (`windowsdesktop-runtime-win-x64.zip`) で検索するようになりました
+
+2. **バージョンプロパティの修正**: `release` ではなく `release-version` プロパティを使用するように修正
+
+3. **フォールバック URL の更新**: メタデータクエリ失敗時のフォールバック URL を 10.0.0 から 10.0.2 に更新
+
+4. **ハッシュ検証の改善**: `Get-FileHash` コマンドレットが利用できない環境でもエラーにならず、警告を表示してスキップするように改善
+
+5. **診断情報の追加**: メタデータ取得時、ダウンロード URL 発見時に詳細ログを出力するように改善
+
+### ランタイムダウンロードのトラブルシューティング
+
+#### ネットワーク接続エラー
+```
+Error downloading runtime: The operation has timed out
+```
+
+**解決方法:**
+- インターネット接続を確認してください
+- プロキシやファイアウォールが Microsoft CDN へのアクセスをブロックしていないか確認してください
+- `-UseRuntimeCache:$false` を使用してキャッシュを無効化してみてください
+
+#### ハッシュ検証エラー
+```
+Hash mismatch! Expected: [hash]
+```
+
+**解決方法:**
+- キャッシュされたファイルが破損している可能性があります
+- キャッシュディレクトリ `%TEMP%\SyncBridge-RuntimeCache\` を手動で削除してください
+- スクリプトを再実行してください
+
+#### ディスク容量不足
+```
+Error: There is not enough space on the disk
+```
+
+**解決方法:**
+- 少なくとも 500 MB の空き容量が必要です
+- 不要なファイルを削除するか、カスタムキャッシュディレクトリを指定してください:
+  ```powershell
+  .\test\setup-test-data.ps1 -DownloadRealRuntime -RuntimeCacheDir "D:\MyCache"
+  ```
+
+#### Get-FileHash コマンドレットが利用できない
+```
+Hash verification skipped (Get-FileHash cmdlet not available).
+```
+
+**原因:**
+- MSYS2 bash 環境や古い PowerShell 環境では `Get-FileHash` コマンドレットが利用できない場合があります
+
+**影響:**
+- ダウンロードファイルのハッシュ検証がスキップされますが、ダウンロード自体は正常に完了します
+- 実用上問題はありませんが、ファイルの整合性チェックは手動で行うことをお勧めします
+
+**解決方法 (オプション):**
+- Windows PowerShell 5.1 以降または PowerShell Core を使用してスクリプトを実行してください
+
+#### プロキシ環境でのダウンロード失敗
+
+**解決方法:**
+PowerShell のプロキシ設定を構成してください:
+```powershell
+# プロキシ設定
+$proxy = [System.Net.WebRequest]::GetSystemWebProxy()
+$proxy.Credentials = [System.Net.CredentialCache]::DefaultCredentials
+[System.Net.WebRequest]::DefaultWebProxy = $proxy
+
+# スクリプト実行
+.\test\setup-test-data.ps1 -DownloadRealRuntime
+```
 
 ## クリーンアップ
 
