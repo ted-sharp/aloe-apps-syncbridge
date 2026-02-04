@@ -20,15 +20,12 @@ namespace Aloe.Apps.SyncBridgeLib.Models
 
     public class RuntimeConfig
     {
-        public string Version { get; set; }
         public string RelativePath { get; set; }
     }
 
     public class AppConfig
     {
         public string AppId { get; set; }
-        public string DisplayName { get; set; }
-        public string Version { get; set; }
         public string RelativePath { get; set; }
         public string EntryDll { get; set; }
         public string LaunchArgPattern { get; set; }
@@ -37,14 +34,10 @@ namespace Aloe.Apps.SyncBridgeLib.Models
     public class SyncOptions
     {
         public List<string> SkipPatterns { get; set; }
-        public int RetryCount { get; set; }
-        public int TimeoutSeconds { get; set; }
 
         public SyncOptions()
         {
             SkipPatterns = new List<string>();
-            RetryCount = 3;
-            TimeoutSeconds = 300;
         }
     }
 }

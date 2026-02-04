@@ -18,7 +18,7 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                 throw new FileNotFoundException($"アプリケーションDLLが見つかりません: {context.AppDllPath}");
             }
 
-            Console.WriteLine($"[情報] 起動: {context.AppDisplayName} (v{context.AppVersion})");
+            Console.WriteLine($"[情報] 起動: {context.AppDllPath}");
 
             // cmd.exe経由でstartコマンドを使用し、完全に独立したプロセスとして起動
             // これにより、SyncBridgeが終了してもアプリは終了しない

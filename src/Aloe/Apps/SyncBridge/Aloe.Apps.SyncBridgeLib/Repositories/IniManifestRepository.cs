@@ -56,18 +56,13 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
         {
             return new RuntimeConfig
             {
-                Version = GetValue("Runtime", "Version"),
                 RelativePath = GetValue("Runtime", "RelativePath")
             };
         }
 
         private SyncOptions LoadSyncOptions()
         {
-            var options = new SyncOptions
-            {
-                RetryCount = int.Parse(GetValue("SyncOptions", "RetryCount", "3")),
-                TimeoutSeconds = int.Parse(GetValue("SyncOptions", "TimeoutSeconds", "300"))
-            };
+            var options = new SyncOptions();
 
             string skipPatterns = GetValue("SyncOptions", "SkipPatterns", "");
             if (!string.IsNullOrEmpty(skipPatterns))
@@ -93,8 +88,6 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
                 var app = new AppConfig
                 {
                     AppId = appId,
-                    DisplayName = GetValue(sectionName, "DisplayName"),
-                    Version = GetValue(sectionName, "Version"),
                     RelativePath = GetValue(sectionName, "RelativePath"),
                     EntryDll = GetValue(sectionName, "EntryDll"),
                     LaunchArgPattern = GetValue(sectionName, "LaunchArgPattern", "")
@@ -133,23 +126,8 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
 
         private string GetManifestPath()
         {
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            string localManifestPath = Path.Combine(localAppData, "Company", "SyncBridge", ManifestFileName);
-
-            if (File.Exists(localManifestPath))
-            {
-                return localManifestPath;
-            }
-
             string exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            string fallbackPath = Path.Combine(exeDir, ManifestFileName);
-
-            if (File.Exists(fallbackPath))
-            {
-                return fallbackPath;
-            }
-
-            return localManifestPath;
+            return Path.Combine(exeDir, ManifestFileName);
         }
     }
 }

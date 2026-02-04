@@ -83,9 +83,9 @@ Configuration is driven by `manifest.ini` which specifies:
 - Application list with versions, paths, entry DLLs
 - Sync options (skip patterns, retry, timeout)
 
-**Manifest locations searched (in order)**:
-1. `%LocalAppData%\Company\SyncBridge\manifest.ini`
-2. Same directory as SyncBridge.exe
+**Manifest location**:
+- Same directory as SyncBridge.exe
+- A default `manifest.ini` is included in the project and copied to the output directory during build
 
 **Manifest Format**: Uses Windows INI format, parsed via Win32 API (GetPrivateProfileString) for zero external dependencies.
 

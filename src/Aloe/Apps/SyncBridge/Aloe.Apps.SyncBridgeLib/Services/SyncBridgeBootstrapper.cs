@@ -54,9 +54,7 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                 AppDllPath = Path.Combine(appPath, app.EntryDll),
                 WorkingDirectory = appPath,
                 DotnetRootPath = runtimePath,
-                Arguments = args,
-                AppDisplayName = app.DisplayName,
-                AppVersion = app.Version
+                Arguments = args
             };
         }
     }
