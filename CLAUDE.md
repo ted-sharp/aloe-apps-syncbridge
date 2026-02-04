@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 SyncBridge is a .NET application distribution tool that synchronizes applications and runtimes from network shares to local machines and launches them. It's implemented as a .NET Framework 4.6.1 Console application designed for ClickOnce deployment.
 
 **Key Architecture Concept**: The tool operates in three phases:
-1. Load manifest (JSON configuration from network share or local path)
+1. Load manifest (INI configuration from network share or local path)
 2. Synchronize files (runtime + applications) from source to `%LocalAppData%\Company\SyncBridge\`
 3. Launch selected application using synchronized .NET runtime via `dotnet.exe`
 
@@ -53,7 +53,7 @@ src/_publish.cmd
 
 2. **Aloe.Apps.SyncBridgeLib** - Core library with layers:
    - **Models/** - `SyncManifest`, `AppConfig`, `RuntimeConfig`, `SyncOptions`
-   - **Repositories/** - `JsonManifestRepository` (loads manifest.json, expands env vars)
+   - **Repositories/** - `IniManifestRepository` (loads manifest.ini using Win32 API, expands env vars)
    - **Services/** - Core orchestration logic:
      - `SyncBridgeBootstrapper` - Main execution flow coordinator
      - `SyncOrchestrator` - Coordinates file synchronization
@@ -68,7 +68,7 @@ src/_publish.cmd
 ```
 Program.cs
   → SyncBridgeBootstrapper
-    → ManifestRepository (load JSON)
+    → ManifestRepository (load INI)
     → SyncOrchestrator → FileSynchronizer
     → AppSelector (choose app)
     → AppLauncher (start process)
@@ -76,7 +76,7 @@ Program.cs
 
 ## Manifest System
 
-Configuration is driven by `manifest.json` which specifies:
+Configuration is driven by `manifest.ini` which specifies:
 - Source network path (`sourceRootPath`)
 - Local sync destination (`localBasePath`)
 - Runtime version and path
@@ -84,15 +84,15 @@ Configuration is driven by `manifest.json` which specifies:
 - Sync options (skip patterns, retry, timeout)
 
 **Manifest locations searched (in order)**:
-1. `%LocalAppData%\Company\SyncBridge\manifest.json`
+1. `%LocalAppData%\Company\SyncBridge\manifest.ini`
 2. Same directory as SyncBridge.exe
 
+**Manifest Format**: Uses Windows INI format, parsed via Win32 API (GetPrivateProfileString) for zero external dependencies.
+
 Test manifests are in `test/manifests/`:
-- `minimal.json` - Single app, basic configuration
-- `standard.json` - Multiple apps with skip patterns
-- `dummywpf.json` - Configuration for DummyWpf sample
-- `empty-apps.json` - Error handling test (no apps)
-- `network-share.json` - UNC path testing
+- `minimal.ini` - Single app, basic configuration
+- `standard.ini` - Multiple apps with skip patterns
+- `dummywpf.ini` - Configuration for DummyWpf sample
 
 ## Testing
 
@@ -114,13 +114,10 @@ Test manifests are in `test/manifests/`:
 ### Manual Integration Test
 ```powershell
 # 1. Setup test manifest
-$localAppData = [Environment]::GetFolderPath('LocalApplicationData')
-$targetDir = Join-Path $localAppData "Company\SyncBridge"
-New-Item -ItemType Directory -Path $targetDir -Force
-Copy-Item "test\manifests\dummywpf.json" -Destination (Join-Path $targetDir "manifest.json")
+.\test\setup-manifest.ps1
 
-# 2. Run SyncBridge (launches DummyWpf)
-dotnet run --project src/Aloe/Apps/SyncBridge/Aloe.Apps.SyncBridge
+# 2. Run SyncBridge directly (.NET Framework 4.6.1 console app)
+.\src\Aloe\Apps\SyncBridge\Aloe.Apps.SyncBridge\bin\Debug\SyncBridge.exe
 ```
 
 See `test/README.md` for detailed test scenarios.
@@ -132,7 +129,8 @@ See `test/README.md` for detailed test scenarios.
 - Interface-based architecture (all services have I-prefixed interfaces)
 - Manual dependency injection in `Program.cs`
 - File sync uses timestamp comparison (not hash-based)
-- Environment variables in manifest paths are auto-expanded by `JsonManifestRepository`
+- Environment variables in manifest paths are auto-expanded by `IniManifestRepository`
+- **Zero external dependencies**: Uses Win32 API for INI parsing (no NuGet packages)
 
 ## Important Implementation Details
 

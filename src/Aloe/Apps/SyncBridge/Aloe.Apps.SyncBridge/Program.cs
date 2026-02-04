@@ -12,7 +12,7 @@ namespace Aloe.Apps.SyncBridge
             {
                 Console.WriteLine("[情報] SyncBridge 開始");
 
-                var manifestRepo = new JsonManifestRepository();
+                var manifestRepo = new IniManifestRepository();
                 var fileSynchronizer = new FileSynchronizer();
                 var syncOrchestrator = new SyncOrchestrator(fileSynchronizer);
                 var appSelector = new AppSelector();

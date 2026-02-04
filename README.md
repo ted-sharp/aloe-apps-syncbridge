@@ -13,7 +13,7 @@ SyncBridgeは、ネットワーク上の共有フォルダからアプリケー�
   - ロールバック対応
 - **アプリケーション起動**: 同期後に指定されたアプリケーションを自動起動
 - **ランタイム管理**: .NET Desktop Runtimeを含むランタイムの一元管理
-- **マニフェスト制御**: JSON設定ファイルによるバージョン・起動設定の管理
+- **マニフェスト制御**: INI設定ファイルによるバージョン・起動設定の管理（Win32 API使用、外部依存なし）
 
 ## システム要件
 
@@ -34,13 +34,13 @@ SyncBridgeは、ネットワーク上の共有フォルダからアプリケー�
 ├── apps/
 │   ├── AppA-1.4.7/             # アプリケーションA
 │   └── AppB-2.1.0/             # アプリケーションB
-└── manifest.json               # 起動設定・バージョン管理
+└── manifest.ini                # 起動設定・バージョン管理
 ```
 
 ### 起動フロー
 
 1. SyncBridgeがClickOnce/exeとして起動
-2. manifest.jsonを読み込み
+2. manifest.iniを読み込み（Win32 API使用）
 3. ソースフォルダ（ネットワーク共有）からローカルに同期
 4. 指定されたアプリケーションを起動
    - `dotnet.exe`のフルパスを指定して起動
@@ -49,39 +49,37 @@ SyncBridgeは、ネットワーク上の共有フォルダからアプリケー�
 
 ## 設定方法
 
-### manifest.json
+### manifest.ini
 
-同期とアプリケーション起動の設定は `manifest.json` で管理します。サンプルファイルは `doc/manifest.json.sample` を参照してください。
+同期とアプリケーション起動の設定は `manifest.ini` で管理します（Windows INI形式）。
 
-```json
-{
-  "version": "1.0",
-  "sourceRootPath": "\\\\shared-server\\DeployRoot",
-  "localBasePath": "%LocalAppData%\\Company\\SyncBridge",
+```ini
+[Manifest]
+Version=1.0
+SourceRootPath=\\shared-server\DeployRoot
+LocalBasePath=%LocalAppData%\Company\SyncBridge
 
-  "runtime": {
-    "version": "10.0.2",
-    "relativePath": "runtime/dotnet-10.0.2"
-  },
+[Runtime]
+Version=10.0.2
+RelativePath=runtime/dotnet-10.0.2
 
-  "applications": [
-    {
-      "appId": "AppA",
-      "displayName": "Application A",
-      "version": "1.4.7",
-      "relativePath": "apps/AppA-1.4.7",
-      "entryDll": "AppA.dll",
-      "launchArgPattern": "--app=AppA"
-    }
-  ],
+[SyncOptions]
+RetryCount=3
+TimeoutSeconds=300
+SkipPatterns=*.pdb;*.log
 
-  "syncOptions": {
-    "skipPatterns": ["*.pdb", "*.log"],
-    "retryCount": 3,
-    "timeoutSeconds": 300
-  }
-}
+[App.AppA]
+DisplayName=Application A
+Version=1.4.7
+RelativePath=apps/AppA-1.4.7
+EntryDll=AppA.dll
+LaunchArgPattern=--app=AppA
 ```
+
+**特徴**:
+- Win32 API (`GetPrivateProfileString`) で解析
+- 外部ライブラリ依存なし（NuGetパッケージ不要）
+- 環境変数の自動展開対応
 
 ### 設定項目
 
@@ -130,7 +128,7 @@ aloe-apps-syncbridge/
 │           │   └── SyncManifest.cs         # マニフェストモデル
 │           ├── Repositories/
 │           │   ├── IManifestRepository.cs
-│           │   └── JsonManifestRepository.cs
+│           │   └── IniManifestRepository.cs
 │           └── Services/
 │               ├── IAppLauncher.cs
 │               ├── IAppSelector.cs
@@ -143,11 +141,12 @@ aloe-apps-syncbridge/
 │               └── SyncBridgeBootstrapper.cs
 └── test/                               # テストプロジェクト
     ├── manifests/                      # テスト用マニフェスト
-    │   ├── dummywpf.json              # DummyWpfテスト用
-    │   ├── minimal.json
-    │   ├── standard.json
+    │   ├── dummywpf.ini               # DummyWpfテスト用
+    │   ├── minimal.ini
+    │   ├── standard.ini
     │   └── ...
-    └── setup-test-data.ps1             # テストデータセットアップ
+    ├── setup-test-data.ps1             # テストデータセットアップ
+    └── setup-manifest.ps1              # マニフェスト配置スクリプト
 ```
 
 ## サンプルアプリケーション
@@ -182,15 +181,12 @@ Copy-Item "$publishDir\*" -Destination $dummyWpfDir -Recurse -Force
 
 3. テスト用マニフェストを配置:
 ```powershell
-$localAppData = [Environment]::GetFolderPath('LocalApplicationData')
-$targetDir = Join-Path $localAppData "Company\SyncBridge"
-New-Item -ItemType Directory -Path $targetDir -Force
-Copy-Item "test\manifests\dummywpf.json" -Destination (Join-Path $targetDir "manifest.json")
+.\test\setup-manifest.ps1
 ```
 
 4. SyncBridgeを実行してDummyWpfを起動:
 ```bash
-dotnet run --project src/Aloe/Apps/SyncBridge/Aloe.Apps.SyncBridge
+.\src\Aloe\Apps\SyncBridge\Aloe.Apps.SyncBridge\bin\Debug\SyncBridge.exe
 ```
 
 DummyWpfが起動し、SyncBridgeから渡されたコマンドライン引数と環境変数が表示されます。
