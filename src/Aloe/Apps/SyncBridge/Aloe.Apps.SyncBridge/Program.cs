@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using Aloe.Apps.SyncBridgeLib.Helpers;
 using Aloe.Apps.SyncBridgeLib.Repositories;
 using Aloe.Apps.SyncBridgeLib.Services;
 
@@ -10,6 +12,20 @@ namespace Aloe.Apps.SyncBridge
         {
             try
             {
+                var options = CommandLineOptions.Parse(args);
+
+                if (options.RandomDelaySeconds > 0)
+                {
+                    var random = new Random();
+                    var delayMs = random.Next(0, options.RandomDelaySeconds * 1000);
+                    Thread.Sleep(delayMs);
+                }
+
+                if (options.ShowConsole)
+                {
+                    ConsoleManager.EnsureConsoleVisible();
+                }
+
                 Console.WriteLine("[情報] SyncBridge 開始");
 
                 var manifestRepo = new IniManifestRepository();
@@ -25,12 +41,20 @@ namespace Aloe.Apps.SyncBridge
                     appLauncher
                 );
 
-                bootstrapper.Execute(args);
+                if (options.SyncOnly)
+                {
+                    bootstrapper.ExecuteSyncOnly(args);
+                }
+                else
+                {
+                    bootstrapper.Execute(args);
+                }
 
                 Console.WriteLine("[情報] SyncBridge 終了");
             }
             catch (Exception ex)
             {
+                ConsoleManager.EnsureConsoleVisible();
                 Console.WriteLine($"[エラー] {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
                 Environment.Exit(1);

@@ -43,6 +43,22 @@ namespace Aloe.Apps.SyncBridgeLib.Services
             _appLauncher.Launch(launchContext);
         }
 
+        public void ExecuteSyncOnly(string[] args)
+        {
+            Console.WriteLine("[情報] 同期専用モード");
+            Console.WriteLine("[情報] マニフェスト読み込み");
+            var manifest = _manifestRepository.LoadManifest();
+            Console.WriteLine("[情報] マニフェスト読み込み: OK");
+
+            var syncResult = _syncOrchestrator.SyncAll(manifest);
+            if (!syncResult.Success)
+            {
+                throw new InvalidOperationException($"同期エラー: {syncResult.ErrorMessage}");
+            }
+
+            Console.WriteLine("[情報] 同期完了");
+        }
+
         private LaunchContext BuildLaunchContext(SyncManifest manifest, AppConfig app, string[] args)
         {
             string runtimePath = Path.Combine(manifest.LocalBasePath, manifest.Runtime.RelativePath);

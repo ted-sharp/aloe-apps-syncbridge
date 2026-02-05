@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Aloe.Apps.SyncBridgeLib.Helpers;
 using Aloe.Apps.SyncBridgeLib.Models;
 
 namespace Aloe.Apps.SyncBridgeLib.Services
@@ -33,6 +34,11 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                 result.TotalFilesUpdated += manifestResult.FilesUpdated;
                 result.TotalFilesSkipped += manifestResult.FilesSkipped;
 
+                if (manifestResult.FilesUpdated > 0)
+                {
+                    ConsoleManager.EnsureConsoleVisible();
+                }
+
                 var runtimeResult = SyncRuntime(manifest, skipPatterns);
                 if (!runtimeResult.Success)
                 {
@@ -42,6 +48,11 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                 }
                 result.TotalFilesUpdated += runtimeResult.FilesUpdated;
                 result.TotalFilesSkipped += runtimeResult.FilesSkipped;
+
+                if (runtimeResult.FilesUpdated > 0)
+                {
+                    ConsoleManager.EnsureConsoleVisible();
+                }
                 Console.WriteLine($"[情報] ランタイム同期: {runtimeResult.FilesUpdated}ファイル更新");
 
                 foreach (var app in manifest.Applications)
@@ -55,6 +66,11 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                     }
                     result.TotalFilesUpdated += appResult.FilesUpdated;
                     result.TotalFilesSkipped += appResult.FilesSkipped;
+
+                    if (appResult.FilesUpdated > 0)
+                    {
+                        ConsoleManager.EnsureConsoleVisible();
+                    }
                     Console.WriteLine($"[情報] {app.AppId}同期: {appResult.FilesUpdated}ファイル更新");
                 }
 

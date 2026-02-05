@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\CommandLineOptions.cs" />
+    <Compile Include="Helpers\ConsoleManager.cs" />
     <Compile Include="Models\SyncManifest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Repositories\IManifestRepository.cs" />
