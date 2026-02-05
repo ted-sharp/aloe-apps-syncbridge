@@ -56,7 +56,8 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
         {
             return new RuntimeConfig
             {
-                RelativePath = GetValue("Runtime", "RelativePath")
+                RelativePath = GetValue("Runtime", "RelativePath"),
+                ZipFileName = GetValue("Runtime", "ZipFileName", "")
             };
         }
 
@@ -90,7 +91,8 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
                     AppId = appId,
                     RelativePath = GetValue(sectionName, "RelativePath"),
                     EntryDll = GetValue(sectionName, "EntryDll"),
-                    LaunchArgPattern = GetValue(sectionName, "LaunchArgPattern", "")
+                    LaunchArgPattern = GetValue(sectionName, "LaunchArgPattern", ""),
+                    ZipFileName = GetValue(sectionName, "ZipFileName", "")
                 };
 
                 apps.Add(app);

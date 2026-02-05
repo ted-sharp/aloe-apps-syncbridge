@@ -30,7 +30,8 @@ namespace Aloe.Apps.SyncBridge
 
                 var manifestRepo = new IniManifestRepository();
                 var fileSynchronizer = new FileSynchronizer();
-                var syncOrchestrator = new SyncOrchestrator(fileSynchronizer);
+                var zipExtractor = new ZipExtractor();
+                var syncOrchestrator = new SyncOrchestrator(fileSynchronizer, zipExtractor);
                 var appSelector = new AppSelector();
                 var appLauncher = new AppLauncher();
 

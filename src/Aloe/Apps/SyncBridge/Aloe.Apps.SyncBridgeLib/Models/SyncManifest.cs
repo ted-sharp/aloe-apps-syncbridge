@@ -21,6 +21,7 @@ namespace Aloe.Apps.SyncBridgeLib.Models
     public class RuntimeConfig
     {
         public string RelativePath { get; set; }
+        public string ZipFileName { get; set; }
     }
 
     public class AppConfig
@@ -29,6 +30,7 @@ namespace Aloe.Apps.SyncBridgeLib.Models
         public string RelativePath { get; set; }
         public string EntryDll { get; set; }
         public string LaunchArgPattern { get; set; }
+        public string ZipFileName { get; set; }
     }
 
     public class SyncOptions

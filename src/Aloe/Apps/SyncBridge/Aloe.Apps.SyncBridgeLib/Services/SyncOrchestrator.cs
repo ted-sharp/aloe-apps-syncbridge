@@ -8,10 +8,12 @@ namespace Aloe.Apps.SyncBridgeLib.Services
     public class SyncOrchestrator : ISyncOrchestrator
     {
         private readonly IFileSynchronizer _fileSynchronizer;
+        private readonly IZipExtractor _zipExtractor;
 
-        public SyncOrchestrator(IFileSynchronizer fileSynchronizer)
+        public SyncOrchestrator(IFileSynchronizer fileSynchronizer, IZipExtractor zipExtractor)
         {
             _fileSynchronizer = fileSynchronizer;
+            _zipExtractor = zipExtractor;
         }
 
         public SyncOrchestratorResult SyncAll(SyncManifest manifest)
@@ -112,18 +114,120 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
         private SyncResult SyncRuntime(SyncManifest manifest, string[] skipPatterns)
         {
-            string sourcePath = Path.Combine(manifest.SourceRootPath, manifest.Runtime.RelativePath);
-            string targetPath = Path.Combine(manifest.LocalBasePath, manifest.Runtime.RelativePath);
+            string runtimeZip = manifest.Runtime.ZipFileName;
 
-            return _fileSynchronizer.SyncFolder(sourcePath, targetPath, skipPatterns);
+            if (!string.IsNullOrEmpty(runtimeZip))
+            {
+                return SyncFromZip(
+                    zipFileName: runtimeZip,
+                    relativePath: manifest.Runtime.RelativePath,
+                    sourceRoot: manifest.SourceRootPath,
+                    localBase: manifest.LocalBasePath,
+                    skipPatterns: skipPatterns
+                );
+            }
+            else
+            {
+                string sourcePath = Path.Combine(manifest.SourceRootPath, manifest.Runtime.RelativePath);
+                string targetPath = Path.Combine(manifest.LocalBasePath, manifest.Runtime.RelativePath);
+                return _fileSynchronizer.SyncFolder(sourcePath, targetPath, skipPatterns);
+            }
         }
 
         private SyncResult SyncApplication(SyncManifest manifest, AppConfig app, string[] skipPatterns)
         {
-            string sourcePath = Path.Combine(manifest.SourceRootPath, app.RelativePath);
-            string targetPath = Path.Combine(manifest.LocalBasePath, app.RelativePath);
+            string appZip = app.ZipFileName;
 
-            return _fileSynchronizer.SyncFolder(sourcePath, targetPath, skipPatterns);
+            if (!string.IsNullOrEmpty(appZip))
+            {
+                return SyncFromZip(
+                    zipFileName: appZip,
+                    relativePath: app.RelativePath,
+                    sourceRoot: manifest.SourceRootPath,
+                    localBase: manifest.LocalBasePath,
+                    skipPatterns: skipPatterns
+                );
+            }
+            else
+            {
+                string sourcePath = Path.Combine(manifest.SourceRootPath, app.RelativePath);
+                string targetPath = Path.Combine(manifest.LocalBasePath, app.RelativePath);
+                return _fileSynchronizer.SyncFolder(sourcePath, targetPath, skipPatterns);
+            }
+        }
+
+        private SyncResult SyncFromZip(string zipFileName, string relativePath, string sourceRoot, string localBase, string[] skipPatterns)
+        {
+            var result = new SyncResult();
+
+            try
+            {
+                string zipFilePath = Path.Combine(sourceRoot, zipFileName);
+                string targetDirectory = Path.Combine(localBase, relativePath);
+
+                if (!File.Exists(zipFilePath))
+                {
+                    result.Success = false;
+                    result.ErrorMessage = $"ZIPファイルが見つかりません: {zipFilePath}";
+                    Console.WriteLine($"[エラー] {result.ErrorMessage}");
+                    return result;
+                }
+
+                var decision = _zipExtractor.DetermineSyncStrategy(zipFilePath, targetDirectory);
+                Console.WriteLine($"[情報] ZIP同期戦略: {decision.Strategy} - {decision.Reason}");
+
+                switch (decision.Strategy)
+                {
+                    case ZipSyncStrategy.InitialExtraction:
+                    case ZipSyncStrategy.ReExtraction:
+                        var extractionResult = _zipExtractor.ExtractIfNeeded(zipFilePath, targetDirectory, forceExtraction: true);
+                        if (!extractionResult.Success)
+                        {
+                            result.Success = false;
+                            result.ErrorMessage = extractionResult.ErrorMessage;
+                            Console.WriteLine($"[エラー] ZIP展開失敗: {extractionResult.ErrorMessage}");
+                            return result;
+                        }
+                        result.FilesUpdated = extractionResult.FilesExtracted;
+                        break;
+
+                    case ZipSyncStrategy.FolderSync:
+                        string sourceFolderPath = Path.Combine(sourceRoot, relativePath);
+                        if (Directory.Exists(sourceFolderPath))
+                        {
+                            var syncResult = _fileSynchronizer.SyncFolder(sourceFolderPath, targetDirectory, skipPatterns);
+                            result.FilesUpdated = syncResult.FilesUpdated;
+                            result.FilesSkipped = syncResult.FilesSkipped;
+                            result.Success = syncResult.Success;
+                            result.ErrorMessage = syncResult.ErrorMessage;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[情報] 差分同期用のソースフォルダが見つかりません: {sourceFolderPath}");
+                            result.FilesSkipped = 0;
+                        }
+                        break;
+
+                    case ZipSyncStrategy.Skip:
+                        result.FilesSkipped = 0;
+                        break;
+
+                    default:
+                        result.Success = false;
+                        result.ErrorMessage = $"不明な同期戦略: {decision.Strategy}";
+                        break;
+                }
+
+                result.Success = true;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = $"ZIP同期エラー: {ex.Message}";
+                Console.WriteLine($"[エラー] {result.ErrorMessage}");
+            }
+
+            return result;
         }
     }
 }
