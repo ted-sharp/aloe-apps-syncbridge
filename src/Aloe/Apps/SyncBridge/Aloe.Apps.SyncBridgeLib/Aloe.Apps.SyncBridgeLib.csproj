@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Deployment" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml.Linq" />
@@ -43,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\ClickOnceHelper.cs" />
     <Compile Include="Helpers\CommandLineOptions.cs" />
     <Compile Include="Helpers\ConsoleManager.cs" />
     <Compile Include="Models\SyncManifest.cs" />

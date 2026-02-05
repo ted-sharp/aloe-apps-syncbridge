@@ -12,6 +12,11 @@ namespace Aloe.Apps.SyncBridge
         {
             try
             {
+                // ClickOnce URL引数を統合
+                args = ClickOnceHelper.MergeArguments(
+                    args,
+                    ClickOnceHelper.GetClickOnceArguments());
+
                 var options = CommandLineOptions.Parse(args);
 
                 if (options.RandomDelaySeconds > 0)
@@ -24,6 +29,11 @@ namespace Aloe.Apps.SyncBridge
                 if (options.ShowConsole)
                 {
                     ConsoleManager.EnsureConsoleVisible();
+                    Console.WriteLine("[情報] 統合後の引数:");
+                    foreach (var arg in args)
+                    {
+                        Console.WriteLine($"  {arg}");
+                    }
                 }
 
                 Console.WriteLine("[情報] SyncBridge 開始");
