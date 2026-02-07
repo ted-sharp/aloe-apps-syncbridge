@@ -8,6 +8,8 @@ namespace Aloe.Apps.SyncBridgeLib.Helpers
     /// </summary>
     public class CommandLineOptions
     {
+        private string[] _rawArgs;
+
         /// <summary>
         /// --consoleフラグ: コンソールを明示的に表示する
         /// </summary>
@@ -36,6 +38,7 @@ namespace Aloe.Apps.SyncBridgeLib.Helpers
         public static CommandLineOptions Parse(string[] args)
         {
             var options = new CommandLineOptions();
+            options._rawArgs = args ?? new string[0];
 
             if (args == null || args.Length == 0)
             {
@@ -79,6 +82,38 @@ namespace Aloe.Apps.SyncBridgeLib.Helpers
             }
 
             return options;
+        }
+
+        /// <summary>
+        /// SyncBridge固有の引数を除外し、アプリケーションに渡す引数のみを取得する
+        /// </summary>
+        /// <returns>アプリケーション用の引数配列</returns>
+        public string[] GetApplicationArguments()
+        {
+            var result = new System.Collections.Generic.List<string>();
+
+            foreach (var arg in _rawArgs)
+            {
+                if (string.IsNullOrWhiteSpace(arg))
+                {
+                    continue;
+                }
+
+                var trimmedArg = arg.Trim();
+
+                // SyncBridge固有の引数は除外
+                if (trimmedArg.Equals("--console", StringComparison.OrdinalIgnoreCase) ||
+                    trimmedArg.Equals("--sync", StringComparison.OrdinalIgnoreCase) ||
+                    trimmedArg.StartsWith("--random-delay=", StringComparison.OrdinalIgnoreCase) ||
+                    trimmedArg.StartsWith("--app=", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                result.Add(arg);
+            }
+
+            return result.ToArray();
         }
     }
 }

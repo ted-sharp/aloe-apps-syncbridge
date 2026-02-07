@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace Aloe.Apps.SyncBridgeLib.Services
 {
@@ -20,16 +22,19 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
             Console.WriteLine($"[情報] 起動: {context.AppDllPath}");
 
-            // cmd.exe経由でstartコマンドを使用し、完全に独立したプロセスとして起動
-            // これにより、SyncBridgeが終了してもアプリは終了しない
+            // dotnet.exeを直接起動し、環境変数で DOTNET_ROOT_X64 を設定
+            // コマンドインジェクションリスクを回避するため、引数を適切にエスケープ
             var startInfo = new ProcessStartInfo
             {
-                FileName = "cmd.exe",
-                Arguments = BuildStartCommand(context),
+                FileName = context.DotnetExePath,
+                Arguments = BuildArgumentsString(context.AppDllPath, context.Arguments),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 WorkingDirectory = context.WorkingDirectory
             };
+
+            // 環境変数を設定
+            startInfo.EnvironmentVariables["DOTNET_ROOT_X64"] = context.DotnetRootPath;
 
             var process = Process.Start(startInfo);
 
@@ -42,22 +47,79 @@ namespace Aloe.Apps.SyncBridgeLib.Services
             process.WaitForExit(1000);
         }
 
-        private string BuildStartCommand(LaunchContext context)
+        /// <summary>
+        /// コマンドライン引数文字列を構築（適切にエスケープ）
+        /// </summary>
+        private string BuildArgumentsString(string appDllPath, string[] appArguments)
         {
-            // startコマンドで新しいウィンドウを起動（親プロセスから独立）
-            // 環境変数DOTNET_ROOT_X64を設定してからdotnetを起動
-            string appArgs = "";
-            if (context.Arguments != null && context.Arguments.Length > 0)
+            var sb = new StringBuilder();
+
+            // DLLパスを追加（必ずクォートで囲む）
+            sb.Append(EscapeArgument(appDllPath));
+
+            // アプリケーション引数を追加
+            if (appArguments != null)
             {
-                appArgs = " " + string.Join(" ", context.Arguments);
+                foreach (var arg in appArguments)
+                {
+                    sb.Append(" ");
+                    sb.Append(EscapeArgument(arg));
+                }
             }
 
-            // /c: コマンドを実行して終了
-            // set: 環境変数を設定
-            // &&: 前のコマンドが成功したら次を実行
-            // start "": 新しいウィンドウを起動（ウィンドウタイトルは空）
-            // /B: 新しいウィンドウを作成しない（バックグラウンドで起動）
-            return $"/c \"set DOTNET_ROOT_X64={context.DotnetRootPath} && cd /d \"{context.WorkingDirectory}\" && start /B \"\" \"{context.DotnetExePath}\" \"{context.AppDllPath}\"{appArgs}\"";
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// コマンドライン引数をエスケープ
+        /// Windows のコマンドライン引数規則に従う
+        /// </summary>
+        private string EscapeArgument(string argument)
+        {
+            if (string.IsNullOrEmpty(argument))
+            {
+                return "\"\"";
+            }
+
+            // スペース、タブ、ダブルクォートを含む場合はクォートが必要
+            bool needsQuotes = argument.Any(c => c == ' ' || c == '\t' || c == '"');
+
+            if (!needsQuotes)
+            {
+                return argument;
+            }
+
+            var sb = new StringBuilder();
+            sb.Append('"');
+
+            int backslashCount = 0;
+            foreach (char c in argument)
+            {
+                if (c == '\\')
+                {
+                    backslashCount++;
+                }
+                else if (c == '"')
+                {
+                    // バックスラッシュをエスケープ（ダブルクォート前）
+                    sb.Append('\\', backslashCount * 2 + 1);
+                    sb.Append('"');
+                    backslashCount = 0;
+                }
+                else
+                {
+                    // 通常のバックスラッシュを出力
+                    sb.Append('\\', backslashCount);
+                    sb.Append(c);
+                    backslashCount = 0;
+                }
+            }
+
+            // 末尾のバックスラッシュをエスケープ（クォート前）
+            sb.Append('\\', backslashCount * 2);
+            sb.Append('"');
+
+            return sb.ToString();
         }
     }
 }

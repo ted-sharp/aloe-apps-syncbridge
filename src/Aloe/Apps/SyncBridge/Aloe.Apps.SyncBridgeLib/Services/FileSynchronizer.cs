@@ -4,6 +4,11 @@ using System.Linq;
 
 namespace Aloe.Apps.SyncBridgeLib.Services
 {
+    /// <summary>
+    /// ファイル同期サービス
+    /// 注意: このクラスはターゲットに存在するがソースに存在しないファイルの削除は行いません。
+    /// ファイル追加・更新のみを処理します。
+    /// </summary>
     public class FileSynchronizer : IFileSynchronizer
     {
         public SyncResult SyncFolder(string sourcePath, string targetPath, string[] skipPatterns = null)

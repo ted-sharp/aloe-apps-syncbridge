@@ -109,17 +109,22 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
                 Console.WriteLine($"[情報] ZIPファイルを展開しています: {zipFilePath}");
 
+                string normalizedTargetDir = Path.GetFullPath(targetDirectory);
+
                 using (var archive = ZipFile.OpenRead(zipFilePath))
                 {
                     foreach (var entry in archive.Entries)
                     {
-                        if (entry.FullName.Contains(".."))
+                        string destinationPath = Path.Combine(targetDirectory, entry.FullName);
+                        string normalizedDestPath = Path.GetFullPath(destinationPath);
+
+                        // パストラバーサル攻撃を防ぐ: 展開先がtargetDirectory配下にあることを確認
+                        if (!normalizedDestPath.StartsWith(normalizedTargetDir + Path.DirectorySeparatorChar) &&
+                            !normalizedDestPath.Equals(normalizedTargetDir))
                         {
                             result.ErrorMessage = $"不正なパスが含まれています: {entry.FullName}";
                             return result;
                         }
-
-                        string destinationPath = Path.Combine(targetDirectory, entry.FullName);
 
                         if (entry.FullName.EndsWith("/"))
                         {

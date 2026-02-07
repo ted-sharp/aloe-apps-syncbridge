@@ -28,44 +28,42 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
             int size,
             string filePath);
 
-        private string _manifestPath;
-
         public SyncManifest LoadManifest()
         {
-            _manifestPath = GetManifestPath();
+            string manifestPath = GetManifestPath();
 
-            if (!File.Exists(_manifestPath))
+            if (!File.Exists(manifestPath))
             {
-                throw new FileNotFoundException($"マニフェストファイルが見つかりません: {_manifestPath}");
+                throw new FileNotFoundException($"マニフェストファイルが見つかりません: {manifestPath}");
             }
 
             var manifest = new SyncManifest
             {
-                Version = GetValue("Manifest", "Version"),
-                SourceRootPath = Environment.ExpandEnvironmentVariables(GetValue("Manifest", "SourceRootPath")),
-                LocalBasePath = Environment.ExpandEnvironmentVariables(GetValue("Manifest", "LocalBasePath")),
-                Runtime = LoadRuntime(),
-                SyncOptions = LoadSyncOptions(),
-                Applications = LoadApplications()
+                Version = GetValue(manifestPath, "Manifest", "Version"),
+                SourceRootPath = Environment.ExpandEnvironmentVariables(GetValue(manifestPath, "Manifest", "SourceRootPath")),
+                LocalBasePath = Environment.ExpandEnvironmentVariables(GetValue(manifestPath, "Manifest", "LocalBasePath")),
+                Runtime = LoadRuntime(manifestPath),
+                SyncOptions = LoadSyncOptions(manifestPath),
+                Applications = LoadApplications(manifestPath)
             };
 
             return manifest;
         }
 
-        private RuntimeConfig LoadRuntime()
+        private RuntimeConfig LoadRuntime(string manifestPath)
         {
             return new RuntimeConfig
             {
-                RelativePath = GetValue("Runtime", "RelativePath"),
-                ZipFileName = GetValue("Runtime", "ZipFileName", "")
+                RelativePath = GetValue(manifestPath, "Runtime", "RelativePath"),
+                ZipFileName = GetValue(manifestPath, "Runtime", "ZipFileName", "")
             };
         }
 
-        private SyncOptions LoadSyncOptions()
+        private SyncOptions LoadSyncOptions(string manifestPath)
         {
             var options = new SyncOptions();
 
-            string skipPatterns = GetValue("SyncOptions", "SkipPatterns", "");
+            string skipPatterns = GetValue(manifestPath, "SyncOptions", "SkipPatterns", "");
             if (!string.IsNullOrEmpty(skipPatterns))
             {
                 options.SkipPatterns = skipPatterns
@@ -77,10 +75,10 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
             return options;
         }
 
-        private List<AppConfig> LoadApplications()
+        private List<AppConfig> LoadApplications(string manifestPath)
         {
             var apps = new List<AppConfig>();
-            var sectionNames = GetAllSectionNames();
+            var sectionNames = GetAllSectionNames(manifestPath);
 
             foreach (var sectionName in sectionNames.Where(s => s.StartsWith("App.")))
             {
@@ -89,10 +87,10 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
                 var app = new AppConfig
                 {
                     AppId = appId,
-                    RelativePath = GetValue(sectionName, "RelativePath"),
-                    EntryDll = GetValue(sectionName, "EntryDll"),
-                    LaunchArgPattern = GetValue(sectionName, "LaunchArgPattern", ""),
-                    ZipFileName = GetValue(sectionName, "ZipFileName", "")
+                    RelativePath = GetValue(manifestPath, sectionName, "RelativePath"),
+                    EntryDll = GetValue(manifestPath, sectionName, "EntryDll"),
+                    LaunchArgPattern = GetValue(manifestPath, sectionName, "LaunchArgPattern", ""),
+                    ZipFileName = GetValue(manifestPath, sectionName, "ZipFileName", "")
                 };
 
                 apps.Add(app);
@@ -101,12 +99,12 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
             return apps;
         }
 
-        private List<string> GetAllSectionNames()
+        private List<string> GetAllSectionNames(string manifestPath)
         {
             IntPtr buffer = Marshal.AllocHGlobal(BufferSize * 2);
             try
             {
-                int length = GetPrivateProfileSectionNames(buffer, BufferSize, _manifestPath);
+                int length = GetPrivateProfileSectionNames(buffer, BufferSize, manifestPath);
                 if (length == 0)
                     return new List<string>();
 
@@ -119,10 +117,10 @@ namespace Aloe.Apps.SyncBridgeLib.Repositories
             }
         }
 
-        private string GetValue(string section, string key, string defaultValue = "")
+        private string GetValue(string manifestPath, string section, string key, string defaultValue = "")
         {
             var sb = new StringBuilder(BufferSize);
-            GetPrivateProfileString(section, key, defaultValue, sb, BufferSize, _manifestPath);
+            GetPrivateProfileString(section, key, defaultValue, sb, BufferSize, manifestPath);
             return sb.ToString();
         }
 

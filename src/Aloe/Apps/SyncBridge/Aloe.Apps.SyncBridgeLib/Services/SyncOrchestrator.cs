@@ -26,21 +26,6 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
                 var skipPatterns = manifest.SyncOptions?.SkipPatterns?.ToArray();
 
-                var manifestResult = SyncManifestFile(manifest);
-                if (!manifestResult.Success)
-                {
-                    result.Success = false;
-                    result.ErrorMessage = manifestResult.ErrorMessage;
-                    return result;
-                }
-                result.TotalFilesUpdated += manifestResult.FilesUpdated;
-                result.TotalFilesSkipped += manifestResult.FilesSkipped;
-
-                if (manifestResult.FilesUpdated > 0)
-                {
-                    ConsoleManager.EnsureConsoleVisible();
-                }
-
                 var runtimeResult = SyncRuntime(manifest, skipPatterns);
                 if (!runtimeResult.Success)
                 {
@@ -82,31 +67,6 @@ namespace Aloe.Apps.SyncBridgeLib.Services
             {
                 result.Success = false;
                 result.ErrorMessage = ex.Message;
-            }
-
-            return result;
-        }
-
-        private SyncResult SyncManifestFile(SyncManifest manifest)
-        {
-            var result = new SyncResult();
-
-            try
-            {
-                string sourceManifest = Path.Combine(manifest.SourceRootPath, "manifest.json");
-                string targetManifest = Path.Combine(manifest.LocalBasePath, "manifest.json");
-
-                if (File.Exists(sourceManifest))
-                {
-                    Directory.CreateDirectory(manifest.LocalBasePath);
-                    File.Copy(sourceManifest, targetManifest, true);
-                    result.FilesUpdated = 1;
-                }
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = $"マニフェスト同期エラー: {ex.Message}";
             }
 
             return result;
@@ -210,15 +170,14 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
                     case ZipSyncStrategy.Skip:
                         result.FilesSkipped = 0;
+                        result.Success = true;
                         break;
 
                     default:
                         result.Success = false;
                         result.ErrorMessage = $"不明な同期戦略: {decision.Strategy}";
-                        break;
+                        return result;
                 }
-
-                result.Success = true;
             }
             catch (Exception ex)
             {

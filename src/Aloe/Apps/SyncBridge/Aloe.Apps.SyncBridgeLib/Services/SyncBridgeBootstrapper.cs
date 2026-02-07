@@ -26,6 +26,8 @@ namespace Aloe.Apps.SyncBridgeLib.Services
 
         public void Execute(string[] args)
         {
+            var options = Helpers.CommandLineOptions.Parse(args);
+
             Console.WriteLine("[情報] マニフェスト読み込み");
             var manifest = _manifestRepository.LoadManifest();
             Console.WriteLine("[情報] マニフェスト読み込み: OK");
@@ -36,9 +38,9 @@ namespace Aloe.Apps.SyncBridgeLib.Services
                 throw new InvalidOperationException($"同期エラー: {syncResult.ErrorMessage}");
             }
 
-            var targetApp = _appSelector.SelectApp(args, manifest);
+            var targetApp = _appSelector.SelectApp(options.AppId, manifest);
 
-            var launchContext = BuildLaunchContext(manifest, targetApp, args);
+            var launchContext = BuildLaunchContext(manifest, targetApp, options.GetApplicationArguments());
 
             _appLauncher.Launch(launchContext);
         }
